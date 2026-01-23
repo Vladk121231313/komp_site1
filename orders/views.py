@@ -147,23 +147,34 @@ def add_to_cart(request, category_slug, product_slug):
         )
         
         if not created:
-            # Если уже был в корзине, просто прибавляем
-            if request.POST.get('update') == 'True':
+            # Если запрос пришел через AJAX (из корзины), 
+            # мы перезаписываем количество тем, что ввел пользователь
+            if is_ajax:
                 order_item.quantity = quantity
             else:
+                # Если это обычный переход по ссылке (из каталога), 
+                # то просто добавляем +1 к имеющемуся
                 order_item.quantity += quantity
             
-            # Проверка, чтобы не добавить больше, чем есть на складе
+            # Проверка на наличие на складе, чтобы не заказали больше возможного
             if order_item.quantity > product.stock:
                 order_item.quantity = product.stock
                 
             order_item.save()
 
         if is_ajax:
+            # Считаем, удален ли товар (если вдруг количество стало 0 или меньше)
+            item_deleted = False
+            if order_item.quantity <= 0:
+                order_item.delete()
+                item_deleted = True
+
             return JsonResponse({
                 'status': 'ok',
+                'item_deleted': item_deleted,
+                'item_cost': "{:.2f}".format(order_item.get_cost()) if not item_deleted else 0,
                 'cart_total_quantity': order.get_total_quantity(),
-                'cart_total_cost': str(order.get_total_cost()),
+                'cart_total_cost': "{:.2f}".format(order.get_total_cost()),
                 'product_slug': product.slug
             })
 
