@@ -143,11 +143,13 @@ LOGIN_REDIRECT_URL = 'users:profile'
 
 LOGOUT_REDIRECT_URL = '/'
 
-# Используем переменные окружения (безопасный способ для Render)
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
 }
 
 # Указываем Django использовать Cloudinary для медиа-файлов
