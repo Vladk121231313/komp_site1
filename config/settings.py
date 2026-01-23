@@ -36,12 +36,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'cloudinary_storage',
     'django.contrib.staticfiles',
+    'cloudinary',
     'catalog',
     'orders',
     'users',
     'crispy_forms',
     'crispy_bootstrap5',
-    'cloudinary',
 ]
 
 MIDDLEWARE = [
@@ -143,6 +143,10 @@ LOGIN_REDIRECT_URL = 'users:profile'
 
 LOGOUT_REDIRECT_URL = '/'
 
+# Эта строка нужна ТОЛЬКО для совместимости Cloudinary и Django 6.0
+STATICFILES_STORAGE = 'cloudinary_storage.storage.StaticCloudinaryStorage'
+
+# А это основной блок для Django
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
