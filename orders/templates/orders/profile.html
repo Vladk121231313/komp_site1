@@ -35,7 +35,7 @@
                     {% elif order.status == 'delivered' %}
                         <span class="badge bg-success">Доставлен ✅</span>
                     {% else %}
-                        <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                        <span class="badge bg-secondary">В пути</span>
                     {% endif %}
 
                     {# Статус оплаты #}

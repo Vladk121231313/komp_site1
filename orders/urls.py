@@ -12,5 +12,8 @@ urlpatterns = [
     path('dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('custom-admin/', views.custom_admin_panel, name='custom_admin'),
     path('admin/update-stock/<int:product_id>/', views.update_stock, name='update_stock'),
-path('admin/delete-product/<int:product_id>/', views.delete_product, name='delete_product'),
+    path('admin/delete-product/<int:product_id>/', views.delete_product, name='delete_product'),
+    path('admin/delete-category/<int:pk>/', views.delete_category, name='delete_category'),
+    path('admin/delete-manufacturer/<int:pk>/', views.delete_manufacturer, name='delete_manufacturer'),
+    path('admin/delete-supplier/<int:pk>/', views.delete_supplier, name='delete_supplier'),
 ]

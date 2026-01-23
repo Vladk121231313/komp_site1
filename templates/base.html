@@ -156,7 +156,7 @@
                             Привет, {{ user.username }}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
-                            <li><a class="dropdown-item" href="{% url 'orders:user_profile' %}">Мои заказы</a></li>
+                            <li><a class="dropdown-item" href="{% url 'orders:user_profile' %}">Профиль</a></li>
                             
                             {% if user.is_staff %}
                                 

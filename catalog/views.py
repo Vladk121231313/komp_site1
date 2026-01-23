@@ -1,13 +1,11 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Product, Category
+from catalog.models import Product, Category
 from django.db.models import Q, Min, Max
+
 
 def catalog_list(request, category_slug=None):
     query = request.GET.get('q')
-    
-    
-    products = Product.objects.all() 
-    
+    products = Product.objects.all()     
     categories = Category.objects.all()
     current_category = None
     

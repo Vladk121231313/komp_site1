@@ -58,25 +58,22 @@ def custom_admin_panel(request):
 
     if request.method == 'POST':
         form_type = request.POST.get('form_type')
-        form = None  # Инициализируем переменную, чтобы избежать UnboundLocalError
-
+        form = None 
         if form_type == 'product':
             form = ProductForm(request.POST, request.FILES)
         elif form_type == 'category':
             form = CategoryForm(request.POST)
         elif form_type == 'manufacturer':
-            form = ManufacturerForm(request.POST) # Проверьте, что здесь именно form = ...
+            form = ManufacturerForm(request.POST)
         elif form_type == 'supplier':
             form = SupplierForm(request.POST)
 
-        # Теперь проверяем, создалась ли форма и валидна ли она
         if form and form.is_valid():
             form.save()
             messages.success(request, "Запись успешно добавлена!")
             return redirect('orders:custom_admin')
         else:
             messages.error(request, "Ошибка при заполнении формы.")
-            # Передаем форму с ошибками обратно в контекст под нужным именем
             if form_type == 'product': context['p_form'] = form
             elif form_type == 'category': context['c_form'] = form
             elif form_type == 'manufacturer': context['m_form'] = form
@@ -103,6 +100,27 @@ def delete_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     product.delete()
     messages.success(request, f"Товар {product.name} удален")
+    return redirect('orders:custom_admin')
+
+@user_passes_test(lambda u: u.is_staff)
+def delete_category(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    category.delete()
+    messages.success(request, f'Категория "{category.name}" успешно удалена.')
+    return redirect('orders:custom_admin') # Замени на свой URL админки
+
+@user_passes_test(lambda u: u.is_staff)
+def delete_manufacturer(request, pk):
+    obj = get_object_or_404(Brand, pk=pk)
+    obj.delete()
+    messages.success(request, 'Производитель удален.')
+    return redirect('orders:custom_admin')
+
+@user_passes_test(lambda u: u.is_staff)
+def delete_supplier(request, pk):
+    obj = get_object_or_404(Supplier, pk=pk)
+    obj.delete()
+    messages.success(request, 'Поставщик удален.')
     return redirect('orders:custom_admin')
 
 # Create your views here.
@@ -248,6 +266,7 @@ def checkout(request):
         form = OrderCreateForm(initial={'email': request.user.email})
     
     return render(request, 'orders/checkout.html', {'form': form, 'order': order})
+
 def remove_from_cart(request, product_slug):
     product = get_object_or_404(Product, slug = product_slug)
     order = None
