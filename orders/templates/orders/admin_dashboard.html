@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4">📊 Аналитика магазина (Админ)</h1>
+
+    {# Блок карточек со статистикой #}
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white shadow-sm">
+                <div class="card-body text-center">
+                    <h5>Общая выручка</h5>
+                    <h2 class="fw-bold">{{ total_revenue }} ₽</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white shadow-sm">
+                <div class="card-body text-center">
+                    <h5>Всего заказов</h5>
+                    <h2 class="fw-bold">{{ orders_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white shadow-sm">
+                <div class="card-body text-center">
+                    <h5>Критический остаток</h5>
+                    <h2 class="fw-bold">{{ low_stock.count }} шт.</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {# Отчет по складу #}
+        <div class="col-lg-6">
+            <h3>⚠️ Проверка склада (Заканчиваются)</h3>
+            <div class="list-group mb-4">
+                {% for prod in low_stock %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ prod.name }} ({{ prod.manufacturer }})
+                    <span class="badge bg-danger rounded-pill">Осталось: {{ prod.stock }}</span>
+                </div>
+                {% empty %}
+                    <p class="text-success">Всех товаров достаточно.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# Последние продажи #}
+        <div class="col-lg-6">
+            <h3>📈 Последние продажи</h3>
+            <table class="table table-sm border">
+                <thead>
+                    <tr>
+                        <th>Товар</th>
+                        <th>Кол-во</th>
+                        <th>Дата</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in recent_sales %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.quantity }} шт.</td>
+                        <td>{{ item.order.created_at|date:"d.m" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

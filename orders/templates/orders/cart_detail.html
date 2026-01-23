@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% load static %}
+{% load orders_tags %} {# Мы будем использовать этот тэг, чтобы потом получить итоговую сумму #}
+
+{% block title %}
+    Ваша Корзина | Компьютерный магазин
+{% endblock %}
+
+{% block content %}
+    <h1>🛒 Ваша корзина</h1>
+    <hr>
+    
+    {% if order %}
+        <h2>Заказ №{{ order.id }}</h2>
+        
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Товар</th>
+                    <th scope="col">Цена</th>
+                    <th scope="col">Количество</th>
+                    <th scope="col">Сумма</th>
+                    <th scope="col">Удалить</th>
+                </tr>
+            </thead>
+            <tbody>
+                {# Перебираем все OrderItem, связанные с этим заказом #}
+              {% for item in order.items.all %} 
+                <tr>
+                    {# 1. КОЛОНКА "ТОВАР" #}
+                    <td>
+                        {# 💡 Здесь можно добавить изображение, если хотите, чтобы было красивее, но оно не должно быть ссылкой #}
+                        <a href="{% url 'catalog:product_detail' category_slug=item.product.category.slug product_slug=item.product.slug %}">{{ item.product.name }}</a>
+                    </td>
+                    
+                    {# 2. КОЛОНКА "ЦЕНА" #}
+                    <td>{{ item.price|floatformat:2 }} руб.</td>
+                    
+                    {# 3. КОЛОНКА "КОЛИЧЕСТВО" #}
+                    <td>
+                        {# Форма будет отправляться в add_to_cart, который мы затем изменим для обработки UPDATE #}
+                        <form action="{% url 'orders:add_to_cart' category_slug=item.product.category.slug product_slug=item.product.slug %}" 
+                            method="post" 
+                            id="update-form-{{ item.product.slug }}" 
+                            class="update-cart-form">
+                            {% csrf_token %}
+                            
+
+                            <div class="input-group input-group-sm" style="width: 150px;">
+        
+                                {# Кнопка МИНУС #}
+                                <button type="button" class="btn btn-outline-danger decrement-btn" data-slug="{{ item.product.slug }}">
+                                    <span aria-hidden="true">–</span>
+                                </button>
+                                
+                                {% with unique_quantity_id='quantity-'|add:item.product.slug %}
+                                <input type="number" 
+                                        name="quantity" 
+                                        value="{{ item.update_quantity_form.quantity.value|default:item.quantity }}" 
+                                        class="form-control text-center quantity-input" 
+                                        id="{{ unique_quantity_id }}"
+                                        min="1" 
+                                        required>
+                                {% endwith %}
+                                
+                                {# Кнопка ПЛЮС #}
+                                <button type="button" class="btn btn-outline-success increment-btn" data-slug="{{ item.product.slug }}">
+                                    <span aria-hidden="true">+</span>
+                                </button>
+                            </div>
+                        </form>
+                    </td>
+                    
+                    {# 4. КОЛОНКА "СУММА" #}
+                    <td id="item-total-{{ item.product.slug }}">{{ item.get_cost|floatformat:2 }} руб.</td> 
+                        
+                    {# 5. КОЛОНКА "УДАЛИТЬ" (НОВАЯ) #}
+                    <td> 
+                        <form action="{% url 'orders:remove_from_cart' product_slug=item.product.slug %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm" aria-label="Удалить товар {{ item.product.name }} из корзины">
+                                <i class="bi bi-trash"></i> Удалить
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                
+               {# В конце таблицы выведем общую сумму заказа #}
+                <tr>
+                    <td colspan="3" class="text-end"><strong>Итого:</strong></td>
+                    {# ЯЧЕЙКА С ОБЩЕЙ СУММОЙ КОРЗИНЫ #}
+                    <td id="cart-grand-total-cell"><strong>{{ order.get_total_cost|floatformat:2 }} руб.</strong></td>
+                    <td></td> {# Пустая ячейка для столбца "Удалить" #}
+                </tr>
+                
+            </tbody>
+        </table>
+        <p class="text-end">
+            <a href="{% url 'orders:checkout' %}" class="btn btn-success">Оформить заказ</a>
+        </p>
+
+    {% else %}
+        <p>Ваша корзина пока **пуста**.</p>
+        <p><a href="{% url 'catalog:catalog_list' %}" class="btn btn-primary">Перейти в каталог</a></p>
+    {% endif %}
+
+{% endblock %}
+
+{% block custom_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const minQuantity = 1;
+        function sendAjaxUpdate(form) {
+            const url = form.action;
+            const formData = new FormData(form);
+            const slug = form.id.replace('update-form-', ''); // Получаем SLUG из ID формы
+
+            // Получаем токен
+            const csrfTokenInput = form.querySelector('input[name="csrfmiddlewaretoken"]');
+            const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    // Добавляем заголовок для Django, чтобы он знал, что это AJAX-запрос
+                    'X-Requested-With': 'XMLHttpRequest' 
+                }
+            })
+            .then(response => response.json()) // Ожидаем JSON ответ
+            .then(data => {
+                // 1. Обновляем стоимость для текущего товара
+                const itemTotalElement = document.getElementById('item-total-' + slug);
+                const itemRow = itemTotalElement ? itemTotalElement.closest('tr') : null; // Находим всю строку товара
+                if (data.item_deleted) {
+                    // ⭐️ НОВОЕ: Если товар удален (количество = 0), удаляем всю строку из таблицы
+                    if (itemRow) {
+                        itemRow.remove(); 
+                    }
+                    // Если корзина пуста, перезагружаем страницу, чтобы показать "Корзина пуста"
+                    if (data.cart_total_quantity === 0) {
+                        window.location.reload(); 
+                    }
+                } 
+                else {
+                    // Если товар не удален, просто обновляем стоимость
+                    if (itemTotalElement) {
+                        itemTotalElement.innerHTML = `${data.item_cost} руб.`;
+                    }
+                }
+
+                // 2. Обновляем общую стоимость корзины
+                const grandTotalElement = document.getElementById('cart-grand-total-cell');
+                if (grandTotalElement) {
+                    grandTotalElement.innerHTML = `<strong>${data.cart_total_cost} руб.</strong>`;
+                }
+                
+                // 3. Обновляем количество товаров в шапке
+                const cartQuantityDisplay = document.getElementById('cart-quantity-display');
+                if (cartQuantityDisplay) {
+                    if (data.cart_total_quantity > 0) {
+                        cartQuantityDisplay.innerHTML = `(${data.cart_total_quantity})`;
+                    } else {
+                        // Если корзина пуста, скрываем счетчик (или очищаем)
+                        cartQuantityDisplay.innerHTML = '';
+                    }
+                }
+                
+                console.log('Корзина обновлена. Новая стоимость:', data.cart_total_cost);
+            })
+            .catch(error => {
+                console.error('Ошибка AJAX:', error);
+                alert('Произошла ошибка при обновлении корзины.');
+            });
+        }
+
+        // ------------------------------------------------------------------
+        // 1. Обработка нажатия кнопки ПЛЮС
+        // ------------------------------------------------------------------
+        document.querySelectorAll('.increment-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const slug = button.getAttribute('data-slug');
+                const input = document.getElementById('quantity-' + slug);
+                if (input) {
+                    let currentValue = parseInt(input.value);
+                    if (!isNaN(currentValue)) {
+                        input.value = currentValue + 1;
+                        // ⭐️ ТРИГГЕР AJAX
+                        sendAjaxUpdate(button.closest('form')); 
+                    }
+                }
+            });
+        });
+
+        // ------------------------------------------------------------------
+        // 2. Обработка нажатия кнопки МИНУС
+        // ------------------------------------------------------------------
+        document.querySelectorAll('.decrement-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const slug = button.getAttribute('data-slug');
+                const input = document.getElementById('quantity-' + slug);
+                if (input) {
+                    let currentValue = parseInt(input.value);
+                    if (!isNaN(currentValue) && currentValue > minQuantity) {
+                        input.value = currentValue - 1;
+                        // ⭐️ ТРИГГЕР AJAX
+                        sendAjaxUpdate(button.closest('form'));
+                    }
+                }
+            });
+        });
+
+        // Также отправляем AJAX при прямом вводе количества в поле
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('change', function() {
+                // Проверяем, что значение больше или равно minQuantity
+                if (parseInt(this.value) < minQuantity) {
+                    this.value = minQuantity;
+                }
+                // ⭐️ ТРИГГЕР AJAX
+                sendAjaxUpdate(this.closest('form'));
+            });
+        });
+    });
+</script>
+{% endblock custom_js%}

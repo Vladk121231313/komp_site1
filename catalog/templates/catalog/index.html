@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Главная | Электроник{% endblock title %}
+
+{% block content %}
+
+{# 1. HERO БАННЕР #}
+<div class="bg-light rounded-3 mb-5 py-5 px-4 text-center shadow-sm">
+    <div class="container-fluid py-3">
+        <h1 class="display-5 fw-bold">Твой компьютер мечты начинается здесь</h1>
+        <p class="fs-4 col-md-8 mx-auto text-muted mt-3">
+            Огромный выбор комплектующих, честные цены и официальная гарантия. 
+            Собери свой идеальный ПК с нами.
+        </p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="{% url 'catalog:catalog_list' %}" class="btn btn-primary btn-lg px-4">
+                Перейти в каталог
+            </a>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'users:register' %}" class="btn btn-outline-secondary btn-lg px-4">
+                    Регистрация
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    {# 2. ПРЕИМУЩЕСТВА (Иконки) #}
+    <div class="row text-center mb-5 g-4">
+        <div class="col-md-4">
+            <div class="mb-3">
+                <i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i>
+            </div>
+            <h5>Официальная гарантия</h5>
+            <p class="text-muted small">Только сертифицированный товар от производителей.</p>
+        </div>
+        <div class="col-md-4">
+            <div class="mb-3">
+                <i class="bi bi-truck text-primary" style="font-size: 3rem;"></i>
+            </div>
+            <h5>Быстрая доставка</h5>
+            <p class="text-muted small">Отправим ваш заказ в день оформления.</p>
+        </div>
+        <div class="col-md-4">
+            <div class="mb-3">
+                <i class="bi bi-headset text-warning" style="font-size: 3rem;"></i>
+            </div>
+            <h5>Поддержка 24/7</h5>
+            <p class="text-muted small">Поможем с выбором комплектующих.</p>
+        </div>
+    </div>
+
+    {# 3. КАТЕГОРИИ (Задел на будущее) #}
+    {# Здесь мы используем параметры ?category=... которые позже обработаем в views #}
+    <h2 class="mb-4 text-center">Популярные категории</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+        <div class="col">
+            <a href="{% url 'catalog:catalog_list' %}?category=gpu" class="card h-100 text-decoration-none text-dark hover-shadow transition">
+                <div class="card-body text-center py-5 bg-white rounded border">
+                    <i class="bi bi-gpu-card mb-3 d-block display-4 text-primary"></i>
+                    <h4 class="card-title">Видеокарты</h4>
+                </div>
+            </a>
+        </div>
+        <div class="col">
+            <a href="{% url 'catalog:catalog_list' %}?category=cpu" class="card h-100 text-decoration-none text-dark hover-shadow transition">
+                <div class="card-body text-center py-5 bg-white rounded border">
+                    <i class="bi bi-cpu mb-3 d-block display-4 text-primary"></i>
+                    <h4 class="card-title">Процессоры</h4>
+                </div>
+            </a>
+        </div>
+        <div class="col">
+            <a href="{% url 'catalog:catalog_list' %}?category=storage" class="card h-100 text-decoration-none text-dark hover-shadow transition">
+                <div class="card-body text-center py-5 bg-white rounded border">
+                    <i class="bi bi-hdd mb-3 d-block display-4 text-primary"></i>
+                    <h4 class="card-title">Накопители</h4>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    {# 4. НОВИНКИ (Товары из базы) #}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>🔥 Новые поступления</h2>
+        <a href="{% url 'catalog:catalog_list' %}" class="text-decoration-none">Смотреть все &rarr;</a>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-5">
+        {% for product in latest_products %}
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0">
+                <a href="{% url 'catalog:product_detail' category_slug=product.category.slug product_slug=product.slug %}" class="text-decoration-none text-dark">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" class="card-img-top p-3" alt="{{ product.name }}" style="height: 200px; object-fit: contain;">
+                    {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <span class="text-muted">Нет фото</span>
+                        </div>
+                    {% endif %}
+                </a>
+                
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title text-truncate">{{ product.name }}</h5>
+                    <p class="card-text text-muted small mb-3">
+                        {{ product.description|truncatewords:10 }}
+                    </p>
+                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                        <span class="fw-bold fs-5">{{ product.price|floatformat:0 }} ₽</span>
+                        <a href="{% url 'catalog:product_detail' category_slug=product.category.slug product_slug=product.slug %}" class="btn btn-sm btn-outline-primary">
+                            Подробнее
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+            <div class="col-12 text-center py-5">
+                <p class="text-muted">Товаров пока нет.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+{# Небольшой стиль для эффекта наведения на карточки категорий #}
+<style>
+    .hover-shadow:hover {
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+    }
+</style>
+
+{% endblock content %}

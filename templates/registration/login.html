@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Вход на сайт{% endblock title %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-dark text-white text-center">
+                        <h2>Войти в "Электроник"</h2>
+                    </div>
+                    <div class="card-body">
+
+                        {# Отображение общих ошибок (например, неверный логин/пароль) #}
+                        {% if form.errors and not form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                Пожалуйста, исправьте ошибки ниже.
+                            </div>
+                        {% endif %}
+                        
+                        {% if form.non_field_errors %}
+                            {% for error in form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="POST">
+                            {% csrf_token %}
+                            
+                            {# Отображение формы с помощью Crispy Forms #}
+                            {{ form|crispy }}
+                            
+                            {# Скрытое поле, куда перенаправить после успешного входа #}
+                            <input type="hidden" name="next" value="{{ next }}" />
+                            
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">Войти</button>
+                            </div>
+                        </form>
+                        
+                        <div class="border-top pt-3 text-center mt-3">
+                            <small class="text-muted">
+                                Нет аккаунта? <a href="{% url 'users:register' %}">Зарегистрироваться</a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

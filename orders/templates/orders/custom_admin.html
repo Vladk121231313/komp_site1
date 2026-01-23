@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid my-4">
+    <h2 class="mb-4 text-center">Управление базой данных</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <ul class="nav nav-pills justify-content-center mb-4" id="adminTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button">📦 Товары</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button">📁 Категории</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="brands-tab" data-bs-toggle="tab" data-bs-target="#brands" type="button">🏭 Производители</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="suppliers-tab" data-bs-toggle="tab" data-bs-target="#suppliers" type="button">🚚 Поставщики</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="adminTabsContent">
+        
+        <div class="tab-pane fade show active" id="products" role="tabpanel">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-dark text-white">Добавить Товар</div>
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="product">
+                                {{ p_form.as_p }}
+                                <button class="btn btn-primary w-100 mt-2">Сохранить</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Фото</th>
+                                            <th>Наименование</th>
+                                            <th>Категория</th>
+                                            <th>Цена</th>
+                                            <th>Склад</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                       {% for product in products %}
+                                        <tr id="product-row-{{ product.id }}">
+                                            <td>
+                                                {% if product.image %}
+                                                    <img src="{{ product.image.url }}" style="width: 40px; height: 40px; object-fit: cover;" class="rounded">
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div>{{ product.name }}</div>
+                                                <small class="text-muted">{{ product.manufacturer.name }}</small>
+                                            </td>
+                                            <td><strong>{{ product.price }} ₽</strong></td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <button class="btn btn-sm btn-outline-secondary change-stock" data-id="{{ product.id }}" data-action="decrement">-</button>
+                                                    <span class="mx-2 fw-bold stock-count" data-id="{{ product.id }}">{{ product.stock }}</span>
+                                                    <button class="btn btn-sm btn-outline-secondary change-stock" data-id="{{ product.id }}" data-action="increment">+</button>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'orders:delete_product' product.id %}" 
+                                                class="btn btn-sm btn-danger" 
+                                                onclick="return confirm('Удалить этот товар?')">🗑️</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="categories" role="tabpanel">
+            <div class="row">
+                <div class="col-md-4">
+                    <form method="post" class="card p-3 shadow-sm border-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="category">
+                        <h5>Новая категория</h5>
+                        {{ c_form.as_p }}
+                        <button class="btn btn-success">Добавить</button>
+                    </form>
+                </div>
+                <div class="col-md-8">
+                    <table class="table table-sm bg-white shadow-sm rounded">
+                        <thead class="table-light"><tr><th>ID</th><th>Название</th><th>Slug</th></tr></thead>
+                        <tbody>
+                            {% for cat in categories %}
+                            <tr><td>{{ cat.id }}</td><td>{{ cat.name }}</td><td>{{ cat.slug }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="brands" role="tabpanel">
+            <div class="row">
+                <div class="col-md-4">
+                    <form method="post" class="card p-3 shadow-sm border-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="manufacturer">
+                        <h5 class="mb-3">Новый производитель</h5>
+                        {{ m_form.as_p }}
+                        <button class="btn btn-warning w-100">Добавить бренд</button>
+                    </form>
+                </div>
+                <div class="col-md-8">
+                    <div class="bg-white shadow-sm rounded p-3">
+                        <table class="table table-hover">
+                            <thead><tr><th>Название</th><th>Описание</th></tr></thead>
+                            <tbody>
+                                {% for m in manufacturers %}
+                                <tr><td><strong>{{ m.name }}</strong></td><td class="small">{{ m.description|truncatechars:100 }}</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="suppliers" role="tabpanel">
+            <div class="row">
+                <div class="col-md-4">
+                    <form method="post" class="card p-3 shadow-sm border-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="supplier">
+                        <h5 class="mb-3">Новый поставщик</h5>
+                        {{ s_form.as_p }}
+                        <button class="btn btn-info w-100 text-white">Добавить поставщика</button>
+                    </form>
+                </div>
+                <div class="col-md-8">
+                    <div class="bg-white shadow-sm rounded p-3">
+                        <table class="table table-hover">
+                            <thead><tr><th>Компания</th><th>Контакты</th></tr></thead>
+                            <tbody>
+                                {% for s in suppliers %}
+                                <tr><td><strong>{{ s.name }}</strong></td><td>{{ s.contact_info }}</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block custom_js %}
+<script>
+    // Функция транслитерации
+function slugify(text) {
+    const rus = 'щ ш ч ц ю я ё ж ъ ы э а б в г д е з и й к л м н о п р с т у ф х ь'.split(' ');
+    const eng = 'shh sh ch cz yu ya yo zh `` y e a b v g d e z i j k l m n o p r s t u f x `'.split(' ');
+    
+    let str = text.toLowerCase().trim();
+    for (let i = 0; i < rus.length; i++) {
+        str = str.split(rus[i]).join(eng[i]);
+    }
+    return str
+        .replace(/[^a-z0-9 -]/g, '') // удаляем спецсимволы
+        .replace(/\s+/g, '-')        // меняем пробелы на тире
+        .replace(/-+/g, '-');        // удаляем двойные тире
+}
+document.querySelectorAll('.change-stock').forEach(button => {
+    button.addEventListener('click', function() {
+        const productId = this.dataset.id;
+        const action = this.dataset.action;
+        const stockLabel = document.querySelector(`.stock-count[data-id="${productId}"]`);
+
+        const formData = new FormData();
+        formData.append('action', action);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch(`/orders/admin/update-stock/${productId}/`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            stockLabel.textContent = data.new_stock;
+            // Подсветка при изменении
+            stockLabel.classList.add('text-primary');
+            setTimeout(() => stockLabel.classList.remove('text-primary'), 500);
+        });
+    });
+});
+document.addEventListener("DOMContentLoaded", function() {
+    const productNameInput = document.querySelector('input[name="name"]');
+    const productSlugInput = document.querySelector('input[name="slug"]');
+
+    if (productNameInput && productSlugInput) {
+        productNameInput.addEventListener('input', function() {
+            productSlugInput.value = slugify(productNameInput.value);
+        });
+    }
+
+    const triggerTabList = [].slice.call(document.querySelectorAll('#adminTabs button'));
+    const activeTabId = localStorage.getItem('activeAdminTab');
+    
+    if (activeTabId) {
+        const tabToActivate = document.querySelector(`#${activeTabId}`);
+        if (tabToActivate) {
+            const tab = new bootstrap.Tab(tabToActivate);
+            tab.show();
+        }
+    }
+
+    // 3. Слушаем клики по вкладкам и сохраняем их ID
+    triggerTabList.forEach(function(tabEl) {
+        tabEl.addEventListener('shown.bs.tab', function(event) {
+            localStorage.setItem('activeAdminTab', event.target.id);
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Личный кабинет{% endblock title %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1>Привет, {{ user.username }}!</h1>
+        <p>Это ваш личный кабинет. Здесь вы сможете увидеть историю заказов, изменить данные и т.д.</p>
+        <hr>
+        <p><a href="{% url 'auth:password_change' %}">Изменить пароль</a></p>
+        
+        {# В будущем здесь будут заказы, данные пользователя и т.д. #}
+    </div>
+{% endblock content %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %} {# Если используете django-crispy-forms #}
+
+{% block title %}Регистрация{% endblock title %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h2>Регистрация нового пользователя</h2>
+                    </div>
+                    <div class="card-body">
+                        
+                        {# Отображение сообщений (например, об успехе или ошибке) #}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="POST">
+                            {% csrf_token %}
+                            
+                            {# Если используете crispy forms #}
+                            {{ form|crispy }} 
+                            
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-success btn-lg">Зарегистрироваться</button>
+                            </div>
+                        </form>
+                        
+                        <div class="border-top pt-3 text-center mt-3">
+                            <small class="text-muted">
+                                Уже есть аккаунт? <a href="{% url 'auth:login' %}">Войти</a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

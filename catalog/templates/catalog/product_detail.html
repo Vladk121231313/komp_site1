@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Детали товара: {{ product.name }}{% endblock title %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row">
+            
+            <div class="col-md-6">
+                <img src="{{ product.image.url }}" class="img-fluid border rounded" alt="{{ product.name }}">
+            </div>
+
+            <div class="col-md-6"> 
+                <h1>{{ product.name }}</h1>
+                <hr>
+                
+                <p class="lead text-muted">Производитель: {{ product.manufacturer.name }}</p> 
+                
+                <h2>{{ product.price|floatformat:2 }} руб.</h2>
+                <p>Гарантия: **{{ product.warranty_months }} месяцев**</p>
+                
+                {# ⭐️ ЛОГИКА КНОПКИ КОРЗИНЫ #}
+                <div id="cart-status-container">
+                    
+                    {% if product.slug in items_in_cart_slugs %}
+                        {# 🟢 СОСТОЯНИЕ 1: ТОВАР УЖЕ В КОРЗИНЕ #}
+                       <button class="btn btn-success w-100" disabled id="in-cart-btn-{{ product.slug }}">
+                            ✅ В корзине
+                        </button>
+                        <a href="{% url 'orders:cart_detail' %}" class="btn btn-outline-secondary w-100 mt-1">Перейти</a>
+                    {% else %}
+                        {# 🔴 СОСТОЯНИЕ 2: ФОРМА ДЛЯ AJAX ДОБАВЛЕНИЯ #}
+                        <form action="{% url 'orders:add_to_cart' category_slug=product.category.slug product_slug=product.slug %}" method="post" id="add-to-cart-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" name="update" value="False">
+                            
+                            {% if user.is_authenticated %}
+                                {# 💡 ИСПРАВЛЕНИЕ 1: Удаляем лишний тег <form> и добавляем нужный ID! #}
+                                <button type="submit" class="btn btn-primary btn-lg w-100" id="add-btn">
+                                    Добавить в корзину
+                                </button>
+                            {% else %}
+                                {# Если не авторизован, просто показываем текст #}
+                                <p class="text-muted">Для добавления товара в корзину, пожалуйста, <a href="{% url 'auth:login' %}">войдите</a> или <a href="{% url 'users:register' %}">зарегистрируйтесь</a>.</p>
+                            {% endif %}
+                        </form>
+                    {% endif %}
+                </div>
+                
+            </div>
+        </div> 
+        
+        {# 🌟 ДОБАВЛЕННОЕ ОПИСАНИЕ ТОВАРА #}
+        <div class="row mt-5">
+            <div class="col-12">
+                <h3>Описание</h3>
+                <p>{{ product.description|linebreaks }}</p>
+            </div>
+        </div>
+        
+    </div>
+{% endblock content %}
+
+{# БЛОК JAVASCRIPT #}
+{% block custom_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('add-to-cart-form');
+        const container = document.getElementById('cart-status-container');
+        const addButton = document.getElementById('add-btn');
+
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); 
+
+                const url = form.action;
+                const formData = new FormData(form);
+
+                if (addButton) { 
+                    const originalText = addButton.innerHTML;
+                    addButton.innerHTML = 'Добавление...';
+                    addButton.disabled = true;
+                }
+                
+                const originalText = addButton.innerHTML;
+                addButton.innerHTML = 'Добавление...';
+                addButton.disabled = true;
+
+                const csrfToken = formData.get('csrfmiddlewaretoken');
+
+                fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    container.innerHTML = `
+                        <button class="btn btn-success btn-lg w-100" disabled id="in-cart-btn">
+                            ✅ Товар добавлен в корзину!
+                        </button>
+                        <p class="mt-2 text-center" id="cart-link-p">
+                            <a href="{% url 'orders:cart_detail' %}">Перейти в корзину</a>
+                        </p>
+                    `;
+                    
+                    const cartQuantityDisplay = document.getElementById('cart-quantity-display'); 
+                    if (cartQuantityDisplay && data.cart_total_quantity > 0) {
+                        cartQuantityDisplay.innerHTML = `(${data.cart_total_quantity})`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при добавлении через AJAX:', error);
+                    alert('Ошибка при добавлении товара. Пожалуйста, попробуйте еще раз.');
+                    addButton.innerHTML = originalText;
+                    addButton.disabled = false;
+                });
+            });
+        }
+    });
+</script>
+{% endblock custom_js %}
