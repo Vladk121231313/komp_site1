@@ -1,11 +1,12 @@
 asgiref==3.11.0
 crispy-bootstrap5==2025.6
+dj-database-url==3.1.0
 Django==6.0.1
 django-crispy-forms==2.5
 gunicorn==24.0.0
 packaging==26.0
 pillow==12.1.0
+psycopg2-binary==2.9.11
 sqlparse==0.5.5
 tzdata==2025.3
 whitenoise==6.11.0
-dj_database_url 
