@@ -56,7 +56,7 @@ class Product(models.Model):
     description = models.TextField(verbose_name='Описание', blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
     warranty_months = models.IntegerField(verbose_name="Гарантия (мес.)", null=True, blank=True)
-    image = models.ImageField(upload_to='products/%Y/%m/%d', verbose_name="Изображение")
+    image = models.ImageField(upload_to='products/%Y/%m/%d', verbose_name="Изображение", max_length=255)
     available = models.BooleanField(default=True, verbose_name="Доступен к продаже")
     
     # --- НОВОЕ ПОЛЕ: СКЛАД ---
