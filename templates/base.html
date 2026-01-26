@@ -9,6 +9,8 @@
      
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <style>
         .header-grid {
             display: flex; 
@@ -94,6 +96,38 @@
         .header-actions form {
             width: 100%;
             margin-bottom: 0.5rem !important;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;        
+        }
+        /* Основные стили для компьютеров */
+        .product-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .product-card {
+            width: calc(25% - 20px); /* 4 товара в ряд */
+        }
+
+        /* Стили для мобильных устройств (экраны меньше 768px) */
+        @media (max-width: 768px) {
+            .product-card {
+                width: calc(50% - 20px); /* 2 товара в ряд на планшетах */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .product-card {
+                width: 100%; /* 1 товар в ряд на телефонах */
+            }
+            
+            .header-menu {
+                display: none; 
+            }
         }
     }
     </style>
