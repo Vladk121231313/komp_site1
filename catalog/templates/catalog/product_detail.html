@@ -77,17 +77,14 @@
 
                 const url = form.action;
                 const formData = new FormData(form);
+                let originalText = ""; // Объявляем один раз
 
                 if (addButton) { 
-                    const originalText = addButton.innerHTML;
+                    originalText = addButton.innerHTML;
                     addButton.innerHTML = 'Добавление...';
                     addButton.disabled = true;
                 }
                 
-                const originalText = addButton.innerHTML;
-                addButton.innerHTML = 'Добавление...';
-                addButton.disabled = true;
-
                 const csrfToken = formData.get('csrfmiddlewaretoken');
 
                 fetch(url, {
@@ -105,25 +102,29 @@
                     return response.json();
                 })
                 .then(data => {
+                    // Мгновенно заменяем содержимое контейнера
                     container.innerHTML = `
-                        <button class="btn btn-success btn-lg w-100" disabled id="in-cart-btn">
-                            ✅ Товар добавлен в корзину!
+                        <button class="btn btn-success btn-lg w-100" disabled>
+                            ✅ Товар добавлен!
                         </button>
-                        <p class="mt-2 text-center" id="cart-link-p">
-                            <a href="{% url 'orders:cart_detail' %}">Перейти в корзину</a>
-                        </p>
+                        <a href="{% url 'orders:cart_detail' %}" class="btn btn-outline-primary btn-lg w-100 mt-2">
+                            Перейти в корзину
+                        </a>
                     `;
                     
+                    // Обновляем счетчик в шапке (если он есть)
                     const cartQuantityDisplay = document.getElementById('cart-quantity-display'); 
-                    if (cartQuantityDisplay && data.cart_total_quantity > 0) {
+                    if (cartQuantityDisplay && data.cart_total_quantity !== undefined) {
                         cartQuantityDisplay.innerHTML = `(${data.cart_total_quantity})`;
                     }
                 })
                 .catch(error => {
-                    console.error('Ошибка при добавлении через AJAX:', error);
-                    alert('Ошибка при добавлении товара. Пожалуйста, попробуйте еще раз.');
-                    addButton.innerHTML = originalText;
-                    addButton.disabled = false;
+                    console.error('Ошибка:', error);
+                    alert('Ошибка при добавлении товара.');
+                    if (addButton) {
+                        addButton.innerHTML = originalText;
+                        addButton.disabled = false;
+                    }
                 });
             });
         }
