@@ -18,7 +18,7 @@
                 <p class="lead text-muted">Производитель: {{ product.manufacturer.name }}</p> 
                 
                 <h2>{{ product.price|floatformat:2 }} руб.</h2>
-                <p>Гарантия: **{{ product.warranty_months }} месяцев**</p>
+                <p>Гарантия: {{ product.warranty_months }} месяцев</p>
                 
                 {# ⭐️ ЛОГИКА КНОПКИ КОРЗИНЫ #}
                 <div id="cart-status-container">
