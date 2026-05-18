@@ -181,7 +181,7 @@ python Init_admin.py
 > **Параметры администратора по умолчанию:**
 > * **Имя пользователя (Логин):** `admin`
 > * **Пароль:** `admin`
-> * **E-mail:** `vladk5273@gmail.com`
+> * **E-mail:** `admin@example.com`
 >
 > Вы можете переопределить эти параметры, задав перед запуском переменные окружения `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_PASSWORD` и `DJANGO_SUPERUSER_EMAIL`.
 
@@ -213,7 +213,7 @@ python manage.py runserver
 | `CLOUDINARY_API_SECRET` | Секретный API ключ для Cloudinary | *(необходимо при Cloudinary деплое)* |
 | `DJANGO_SUPERUSER_USERNAME`| Имя админа для скрипта `Init_admin.py` | `admin` |
 | `DJANGO_SUPERUSER_PASSWORD`| Пароль админа для скрипта `Init_admin.py` | `admin` |
-| `DJANGO_SUPERUSER_EMAIL`   | Email админа для скрипта `Init_admin.py` | `vladk5273@gmail.com` |
+| `DJANGO_SUPERUSER_EMAIL`   | Email админа для скрипта `Init_admin.py` | `admin@example.com` |
 
 ---
 
